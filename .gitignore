@@ -1,0 +1,21 @@
+# Fichiers de compilation Maven et binaires
+/target/
+*.jar
+*.war
+*.zip
+*.tar.gz
+
+# Fichiers d'environnement sensibles (NE JAMAIS COMMITER)
+.env
+
+# Fichiers d'IDE (IntelliJ, VS Code, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# Logs et autres
+*.log
+/log/
+.DS_Store

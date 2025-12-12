@@ -1,0 +1,23 @@
+server:
+  port: 8083 # Port du Service Utilisateur
+
+# Configuration BDD PostgreSQL (JPA)
+spring:
+  # Lit les variables d'environnement définies dans docker-compose.yml
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://users-postgres:5432/usersdb}
+    username: ${SPRING_DATASOURCE_USERNAME:user}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # Crée ou met à jour les tables (pour l'environnement Docker)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+# Configuration JWT (Clé lue depuis l'environnement Docker)
+jwt:
+  secret: ${JWT_SECRET_KEY} # LUE DEPUIS docker-compose.yml
+  expiration: 86400000 # 24 heures en millisecondes

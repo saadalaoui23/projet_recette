@@ -1,34 +1,41 @@
-package com.services; 
+package com.services;
 
 import java.util.List;
 
-import org.springframework.stereotype.Service; // Pour getrecettebyid
-
+import org.springframework.stereotype.Service;
 import com.DTO.RecetteRequest;
 import com.exception.RnotFound;
-import com.models.Recettes; // Votre exception pour 404
-import com.repositories.RecetteRepository; // Votre entité
+import com.models.Recettes;
+import com.repositories.RecetteRepository;
 
 import lombok.RequiredArgsConstructor;
+
+// NOUVEAUX IMPORTS :
+import com.events.RecetteEvent; // Votre DTO d'événement Kafka
+import com.clients.UserClient; // Votre Feign Client hypothétique
 
 @Service
 @RequiredArgsConstructor
 public class RecetteServiceImpl implements RecetteService {
-    
+
     // Injection par Constructeur (Best Practice)
-    private final RecetteRepository recetteRepository; 
+    private final RecetteRepository recetteRepository;
+
+    // NOUVEAU : Injection du Kafka Producer
+    private final RecetteProducerService producerService;
+
+    // NOUVEAU : Injection du Feign Client (pour UserService hypothétique)
+    private final UserClient userClient;
 
     // --- 1. READ ALL ---
     @Override
     public List<Recettes> getallrecettes() {
-        // Implémentation Complète
         return recetteRepository.findAll();
     }
 
     // --- 2. READ BY ID ---
     @Override
     public Recettes getrecettebyid(Long id) {
-        // Implémentation Complète avec orElseThrow
         return recetteRepository.findById(id)
                 .orElseThrow(() -> new RnotFound("Recette non trouvée avec l'ID: " + id));
     }
@@ -36,51 +43,92 @@ public class RecetteServiceImpl implements RecetteService {
     // --- 3. CREATE ---
     @Override
     public Recettes createrecette(RecetteRequest recetteRequest) {
-        // Implémentation Complète avec Mapping DTO -> Entité
-        
-        // 1. Mapper le Request DTO à l'Entité BDD
+
+        // **********************************************
+        // NOUVEAU : 1. VALIDATION SYNCHRONE (Feign)
+        // Supposons que RecetteRequest inclut un Long userId pour la validation
+        /*
+        if (recetteRequest.getUserId() != null) {
+            try {
+                if (!userClient.checkUserExists(recetteRequest.getUserId())) {
+                    throw new RnotFound("L'utilisateur spécifié n'existe pas. Création annulée.");
+                }
+            } catch (Exception e) {
+                System.err.println("Erreur Feign: Impossible de valider l'utilisateur. " + e.getMessage());
+                // On pourrait ajouter une logique pour bloquer ou autoriser la création ici
+            }
+        }
+        */
+        // **********************************************
+
         Recettes nouvelleRecette = mapRequestToRecette(recetteRequest);
-        
-        // 2. Sauvegarder et retourner l'entité avec son ID généré
-        return recetteRepository.save(nouvelleRecette);
+        Recettes savedRecette = recetteRepository.save(nouvelleRecette);
+
+        // **********************************************
+        // NOUVEAU : 2. PUBLICATION KAFKA (Asynchrone)
+        producerService.sendRecetteEvent(new RecetteEvent(
+                savedRecette.getId(),
+                savedRecette.getNom(),
+                savedRecette.getDescription(),
+                "CREATED"
+        ));
+        // **********************************************
+
+        return savedRecette;
     }
 
     // --- 4. UPDATE ---
     @Override
     public Recettes updaterecette(Long id, RecetteRequest recetteRequest) {
-        // 1. Chercher l'entité, ou lancer une exception (RnotFound)
         Recettes existingRecette = recetteRepository.findById(id)
                 .orElseThrow(() -> new RnotFound("Impossible de mettre à jour. Recette non trouvée avec l'ID: " + id));
 
-        // 2. Mettre à jour les champs de l'entité existante (Mapping)
         existingRecette.setNom(recetteRequest.getNom());
         existingRecette.setDescription(recetteRequest.getDescription());
         existingRecette.setIngredients(recetteRequest.getIngredients());
-        
-        // 3. Sauvegarder et retourner l'entité mise à jour
-        return recetteRepository.save(existingRecette);
+
+        Recettes updatedRecette = recetteRepository.save(existingRecette);
+
+        // **********************************************
+        // NOUVEAU : PUBLICATION KAFKA (Asynchrone)
+        producerService.sendRecetteEvent(new RecetteEvent(
+                updatedRecette.getId(),
+                updatedRecette.getNom(),
+                updatedRecette.getDescription(),
+                "UPDATED"
+        ));
+        // **********************************************
+
+        return updatedRecette;
     }
-    
+
     // --- 5. DELETE ---
     @Override
     public void deleterecette(Long id) {
-        // Implémentation Complète avec vérification d'existence
-        if (!recetteRepository.existsById(id)) {
-            throw new RnotFound("Impossible de supprimer. Recette non trouvée avec l'ID: " + id);
-        }
-        recetteRepository.deleteById(id);
+        Recettes recetteToDelete = recetteRepository.findById(id)
+                .orElseThrow(() -> new RnotFound("Impossible de supprimer. Recette non trouvée avec l'ID: " + id));
+
+        recetteRepository.delete(recetteToDelete);
+
+        // **********************************************
+        // NOUVEAU : PUBLICATION KAFKA (Asynchrone)
+        producerService.sendRecetteEvent(new RecetteEvent(
+                id,
+                recetteToDelete.getNom(),
+                recetteToDelete.getDescription(),
+                "DELETED"
+        ));
+        // **********************************************
     }
 
     // --- Méthode de Mapping Privée ---
 
-    // Mappe le DTO de Requête vers l'Entité BDD (Utilisé dans CREATE)
     private Recettes mapRequestToRecette(RecetteRequest request) {
-        // Utilise le constructeur avec tous les arguments (sauf l'ID, qui est null pour la création)
         return new Recettes(
-            null, // ID est laissé null pour l'auto-incrémentation
-            request.getNom(),
-            request.getDescription(),
-            request.getIngredients()
+                null, // ID est laissé null pour l'auto-incrémentation
+                request.getNom(),
+                request.getDescription(),
+                request.getIngredients()
         );
     }
 }

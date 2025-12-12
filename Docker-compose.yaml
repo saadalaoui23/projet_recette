@@ -1,0 +1,144 @@
+services:
+  # ==========================================
+  # INFRASTRUCTURE & BASES DE DONNÉES
+  # ==========================================
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - cloud-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Configuration pour que Kafka soit accessible par les autres conteneurs via 'kafka:9092'
+      # et depuis l'hôte (optionnel) via 'localhost:9092'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - cloud-network
+
+  planning-mongo:
+    image: mongo:6.0
+    container_name: planning-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=saad
+      - MONGO_INITDB_ROOT_PASSWORD=sasmasmasrh10
+      - MONGO_INITDB_DATABASE=planningDB
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - cloud-network
+
+  recettes-postgres:
+    image: postgres:16
+    container_name: recettes-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=saad
+      - POSTGRES_PASSWORD=sasmasmasrh10
+      - POSTGRES_DB=recettesDB
+    volumes:
+      - recettes_pg_data:/var/lib/postgresql/data
+    networks:
+      - cloud-network
+
+  users-postgres:
+    image: postgres:16
+    container_name: users-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=saad
+      - POSTGRES_PASSWORD=sasmasmasrh10
+      - POSTGRES_DB=usersDB
+    volumes:
+      - users_pg_data:/var/lib/postgresql/data
+    networks:
+      - cloud-network
+
+  # ==========================================
+  # MICROSERVICES (BACKEND)
+  # ==========================================
+
+  planning-app:
+    build: ./planning_service
+    container_name: planning-app
+    ports:
+      - "8082:8082"
+    env_file:
+      - ./planning_service/.env
+    depends_on:
+      - planning-mongo
+      - kafka
+    networks:
+      - cloud-network
+
+  recettes-app:
+    build: ./recettes_service
+    container_name: recettes-app
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./recettes_service/.env
+    depends_on:
+      - recettes-postgres
+      - kafka
+    networks:
+      - cloud-network
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "8083:8083"
+    env_file:
+      - ./user-service/.env
+    depends_on:
+      - users-postgres
+    networks:
+      - cloud-network
+
+  # ==========================================
+  # API GATEWAY
+  # ==========================================
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./api-gateway/.env
+    depends_on:
+      - planning-app
+      - recettes-app
+      - user-service
+      - zookeeper
+    networks:
+      - cloud-network
+
+volumes:
+  mongo_data:
+  recettes_pg_data:
+  users_pg_data:
+
+networks:
+  cloud-network:
+    driver: bridge

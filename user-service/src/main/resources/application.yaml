@@ -5,9 +5,9 @@ server:
 spring:
   # Lit les variables d'environnement définies dans docker-compose.yml
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://users-postgres:5432/usersdb}
-    username: ${SPRING_DATASOURCE_USERNAME:user}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://users-postgres:5432/usersDB}
+    username: ${SPRING_DATASOURCE_USERNAME:saad}
+    password: ${SPRING_DATASOURCE_PASSWORD:sasmasmasrh10}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

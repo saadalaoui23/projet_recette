@@ -1,0 +1,34 @@
+# gateway-service/src/main/resources/application.yml
+
+server:
+  port: 8000 # Point d'entrée unique de la Gateway
+
+spring:
+  # Désactivation du Config Client qui cause un crash (CORRECT)
+  cloud:
+    config:
+      enabled: false
+    gateway:
+      default-filters:
+        - name: JwtAuth # Active le filtre JwtAuthFilter globalement (CORRECT)
+      routes:
+        # 1. ROUTE UTILISATEUR
+        - id: user_route
+          # ✅ CORRECTION: Utilisation de l'URL directe du conteneur user-service
+          uri: http://user-service:8083
+          predicates:
+            - Path=/users/**
+
+        # 2. ROUTE RECETTES
+        - id: recettes_route
+          # ✅ CORRECTION: Utilisation de l'URL directe du conteneur recettes-service
+          uri: http://recettes-service:8081
+          predicates:
+            - Path=/recettes/**
+
+        # 3. ROUTE PLANNING
+        - id: planning_route
+          # ✅ CORRECTION: Utilisation de l'URL directe du conteneur planning-service
+          uri: http://planning-service:8082
+          predicates:
+            - Path=/planning/**

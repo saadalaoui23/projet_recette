@@ -1,0 +1,13 @@
+apiVersion: v1
+data:
+  JWT_SECRET_KEY: c3ByaW5nLWJvb3QtbWljcm9zZXJ2aWNlcy1hdXRoLXRva2VuLWtleS1zZWNyZXQ=
+  PLANNING_SERVICE_URL: http://planning-app:8082
+  RECETTES_SERVICE_URL: http://recettes-app:8081
+  SERVER_PORT: "8000"
+  SPRING_CLOUD_ZOOKEEPER_CONNECT_STRING: zookeeper:2181
+  USER_SERVICE_URL: http://user-service:8083
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: api-gateway-api-gateway--env
+  name: api-gateway--env

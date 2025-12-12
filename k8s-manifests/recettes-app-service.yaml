@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: recettes-app
+  name: recettes-app
+spec:
+  ports:
+    - name: "8081"
+      port: 8081
+      targetPort: 8081
+  selector:
+    io.kompose.service: recettes-app

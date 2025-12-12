@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: recettes-postgres
+  name: recettes-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: recettes-postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: recettes-postgres
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: recettesDB
+            - name: POSTGRES_PASSWORD
+              value: sasmasmasrh10
+            - name: POSTGRES_USER
+              value: saad
+          image: postgres:16
+          name: recettes-postgres
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: recettes-pg-data
+      restartPolicy: Always
+      volumes:
+        - name: recettes-pg-data
+          persistentVolumeClaim:
+            claimName: recettes-pg-data

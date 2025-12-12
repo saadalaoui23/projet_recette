@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  DB_HOST: planning-mongo
+  DB_NAME: planningDB
+  DB_PASS: sasmasmasrh10
+  DB_PORT: "27017"
+  DB_USER: saad
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SERVER_PORT: "8082"
+  SPRING_DATA_MONGODB_URI: mongodb://saad:sasmasmasrh10@planning-mongo:27017/planningDB?authSource=admin
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: planning-app-planning-service--env
+  name: planning-service--env

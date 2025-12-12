@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  DB_HOST: recettes-postgres
+  DB_NAME: recettesDB
+  DB_PASS: sasmasmasrh10
+  DB_PORT: "5432"
+  DB_USER: saad
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SERVER_PORT: "8081"
+  SPRING_DATASOURCE_PASSWORD: sasmasmasrh10
+  SPRING_DATASOURCE_URL: jdbc:postgresql://recettes-postgres:5432/recettesDB
+  SPRING_DATASOURCE_USERNAME: saad
+  SPRING_JPA_HIBERNATE_DDL_AUTO: update
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: recettes-app-recettes-service--env
+  name: recettes-service--env

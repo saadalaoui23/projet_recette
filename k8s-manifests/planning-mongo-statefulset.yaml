@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    # Conserver les annotations Kompose pour le suivi
+    kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: planning-mongo
+  name: planning-mongo
+spec:
+  # Base de données, nécessite une seule réplique
+  replicas: 1
+  serviceName: planning-mongo # Obligatoire pour StatefulSet, doit correspondre au service Headless
+  selector:
+    matchLabels:
+      io.kompose.service: planning-mongo
+
+  # Strategy par défaut pour StatefulSet : RollingUpdate
+
+  template:
+    metadata:
+      labels:
+        io.kompose.service: planning-mongo
+    spec:
+      containers:
+        - env:
+            # Secrets en clair (À migrer vers Kubernetes Secret plus tard)
+            - name: MONGO_INITDB_DATABASE
+              value: planningDB
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: sasmasmasrh10
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: saad
+          image: mongo:6.0
+          name: planning-mongo
+          ports:
+            - containerPort: 27017
+              protocol: TCP
+          volumeMounts:
+            # Monte le volume persistant créé via VolumeClaimTemplates
+            - mountPath: /data/db
+              name: mongo-data-volume # Nom du volumeMount ici
+      restartPolicy: Always
+      # REMARQUE : La section 'volumes' est supprimée car elle est remplacée par 'volumeClaimTemplates'
+
+  # -------------------------------------------------------------
+  # VolumeClaimTemplates : Pour la persistance des données
+  # Ceci crée automatiquement le PersistentVolumeClaim (PVC)
+  # -------------------------------------------------------------
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-data-volume # Nom du volume persistent (utilisé dans volumeMounts)
+      spec:
+        accessModes: [ "ReadWriteOnce" ] # Le volume ne peut être monté que par un seul pod à la fois
+        resources:
+          requests:
+            storage: 5Gi # Espace de stockage demandé (ajustez selon vos besoins)
+
+# N'oubliez pas qu'un service est nécessaire pour accéder à ce StatefulSet.
+# Vous avez probablement déjà un planning-mongo-service.yaml généré par Kompose.

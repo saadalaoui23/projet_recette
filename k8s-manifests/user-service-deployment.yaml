@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: user-service
+  name: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: user-service
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: saadalaouisosse/user-service:k8s
+
+
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://users-postgres:5432/usersDB
+            - name: SPRING_DATASOURCE_USERNAME
+              value: saad
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: sasmasmasrh10
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: update
+
+          # On garde le reste pour le port et le secret JWT
+          envFrom:
+            - configMapRef:
+                name: user-service--env
+
+          ports:
+            - containerPort: 8083
+              protocol: TCP
+      restartPolicy: Always

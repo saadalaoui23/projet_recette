@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: planning-app
+  name: planning-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: planning-app
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: planning-app
+    spec:
+      containers:
+        - envFrom:
+            - configMapRef:
+                name: planning-service--env
+          image: saadalaouisosse/planning-app:k8s
+          name: planning-app
+          ports:
+            - containerPort: 8082
+              protocol: TCP
+      restartPolicy: Always

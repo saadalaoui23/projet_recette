@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: recettes-app
+  name: recettes-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: recettes-app
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: c:\programdata\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert -o k8s-manifests
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: recettes-app
+    spec:
+      containers:
+        - envFrom:
+            - configMapRef:
+                name: recettes-service--env
+          image: saadalaouisosse/planning-app:k8s
+          name: recettes-app
+          ports:
+            - containerPort: 8081
+              protocol: TCP
+      restartPolicy: Always

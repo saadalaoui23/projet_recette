@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-postgres
+  labels:
+    io.kompose.service: users-postgres
+spec:
+  ports:
+    - name: "5432"
+      port: 5432       # Le port que l'app appelle (CORRIGÉ ici pour être 5432)
+      targetPort: 5432 # Le port du conteneur
+  selector:
+    io.kompose.service: users-postgres

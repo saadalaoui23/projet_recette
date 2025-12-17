@@ -26,6 +26,8 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
 
     // Liste des endpoints qui ne nécessitent PAS de JWT
     public static final List<String> OPEN_API_ENDPOINTS = List.of(
+            "/users/api/users/register", // Chemin complet arrivant sur Gateway
+            "/users/api/users/login",    // Chemin complet arrivant sur Gateway
             "/api/users/register",
             "/api/users/login",
             "/exists" // Pour matcher /api/users/{id}/exists selon votre path

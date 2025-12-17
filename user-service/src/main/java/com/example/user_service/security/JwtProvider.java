@@ -15,11 +15,11 @@ import java.util.Date;
 public class JwtProvider {
 
     // Clé secrète stockée dans application.yml
-    @Value("${jwt.secret}")
+    @Value("${JWT_SECRET_KEY}")
     private String jwtSecret;
 
     // Durée de validité du token (en ms, ici 24h)
-    @Value("${jwt.expiration}")
+    @Value("${JWT_EXPIRATION:86400000}")
     private long jwtExpiration;
 
     // ----------------------------------------------------

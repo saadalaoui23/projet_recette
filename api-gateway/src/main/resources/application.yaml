@@ -18,17 +18,23 @@ spring:
           uri: http://user-service:8083
           predicates:
             - Path=/users/**
+          filters:
+            - StripPrefix=1
 
         # 2. ROUTE RECETTES
         - id: recettes_route
           # ✅ CORRECTION: Utilisation de l'URL directe du conteneur recettes-service
-          uri: http://recettes-service:8081
+          uri: http://recettes-app:8081
           predicates:
             - Path=/recettes/**
+          filters:
+            - StripPrefix=1
 
         # 3. ROUTE PLANNING
         - id: planning_route
           # ✅ CORRECTION: Utilisation de l'URL directe du conteneur planning-service
-          uri: http://planning-service:8082
+          uri: http://planning-app:8082
           predicates:
             - Path=/planning/**
+          filters:
+            - StripPrefix=1

@@ -38,6 +38,7 @@ public class UserServiceImpl implements UserService {
         newUser.setPassword(hashedPassword);
 
         newUser.setProvider("LOCAL");
+        newUser.setRole("ROLE_USER");
 
         return userRepository.save(newUser);
     }

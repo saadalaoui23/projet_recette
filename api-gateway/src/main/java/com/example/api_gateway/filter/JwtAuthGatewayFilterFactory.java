@@ -24,17 +24,17 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
     @Value("${JWT_SECRET_KEY}")
     private String jwtSecret;
 
+    // Liste des endpoints qui ne nécessitent PAS de JWT
     public static final List<String> OPEN_API_ENDPOINTS = List.of(
-            "/users/api/users/register",
-            "/users/api/users/login",
-            "/users/api/users/*/exists"
+            "/api/users/register",
+            "/api/users/login",
+            "/exists" // Pour matcher /api/users/{id}/exists selon votre path
     );
 
     public JwtAuthGatewayFilterFactory() {
         super(Config.class);
     }
 
-    // ✅ AJOUT CRUCIAL : On force le nom du filtre pour qu'il corresponde au YAML
     @Override
     public String name() {
         return "JwtAuth";
@@ -44,20 +44,17 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
+            String path = request.getURI().getPath();
 
-            // 1. Contourner les endpoints publics
-            if (isSecured(request)) {
+            // ✅ CORRECTION LOGIQUE : Si le chemin n'est PAS sécurisé (est public), on passe directement
+            if (!isSecured(request)) {
                 return chain.filter(exchange);
             }
 
-            // 2. Vérifier header Authorization
+            // 2. Vérifier header Authorization pour les routes sécurisées
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-            if (authHeader == null) {
-                return this.onError(exchange, "Header Authorization manquant", HttpStatus.UNAUTHORIZED);
-            }
-
-            if (!authHeader.startsWith("Bearer ")) {
-                return this.onError(exchange, "Format JWT invalide", HttpStatus.UNAUTHORIZED);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return this.onError(exchange, "Header Authorization manquant ou invalide", HttpStatus.UNAUTHORIZED);
             }
 
             String token = authHeader.substring(7);
@@ -65,16 +62,15 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
             // 3. Valider le token
             try {
                 validateToken(token);
+
+                // 4. Ajouter infos utilisateur (Optionnel : utile pour les services en aval)
+                Claims claims = getClaimsFromToken(token);
+                exchange = exchange.mutate()
+                        .request(request.mutate().header("loggedInUser", claims.getSubject()).build())
+                        .build();
+
             } catch (Exception e) {
                 return this.onError(exchange, "Token invalide ou expiré", HttpStatus.UNAUTHORIZED);
-            }
-
-            // 4. Ajouter infos utilisateur
-            try {
-                Claims claims = getClaimsFromToken(token);
-                exchange.getRequest().mutate().header("username", claims.getSubject()).build();
-            } catch (Exception e) {
-                // Ignore
             }
 
             return chain.filter(exchange);
@@ -96,12 +92,14 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
 
     private boolean isSecured(ServerHttpRequest request) {
         String path = request.getURI().getPath();
-        return OPEN_API_ENDPOINTS.stream().noneMatch(path::startsWith);
+        // ✅ On vérifie si le chemin actuel contient l'un des mots-clés publics
+        return OPEN_API_ENDPOINTS.stream().noneMatch(path::contains);
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, String err, HttpStatus httpStatus) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(httpStatus);
+        // Vous pouvez ajouter un message d'erreur dans le body ici si nécessaire
         return response.setComplete();
     }
 

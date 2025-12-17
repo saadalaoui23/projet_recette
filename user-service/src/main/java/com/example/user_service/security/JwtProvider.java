@@ -42,8 +42,8 @@ public class JwtProvider {
     // 2. RECUPERATION DE LA CLE SECRETE
     // ----------------------------------------------------
     private Key getSigningKey() {
-        // Utilisez getBytes() au lieu du décodeur Base64 pour éviter les erreurs de format
-        byte[] keyBytes = jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        // Remplacer .getBytes() par le décodeur Base64 pour être raccord avec la Gateway
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

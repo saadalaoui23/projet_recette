@@ -1,22 +1,23 @@
-import { useState } from 'react';
-import './App.css';
-import Login from './pages/LoginPage';
-import Register from './pages/Register';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import HomePage from './pages/HomePage';
+
+const PrivateRoute = ({ children }: { children: JSX.Element }) => {
+  const token = localStorage.getItem('token');
+  return token ? children : <Navigate to="/login" replace />;
+};
 
 function App() {
-  const [showLogin, setShowLogin] = useState(true);
-
   return (
-    <div className="App">
-      <nav style={{ marginBottom: '20px' }}>
-        <button onClick={() => setShowLogin(true)} style={{ marginRight: '10px' }}>Login</button>
-        <button onClick={() => setShowLogin(false)}>Register</button>
-      </nav>
-
-      <h1>{showLogin ? 'Connexion' : 'Inscription'}</h1>
-      {showLogin ? <Login /> : <Register />}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/home" element={<PrivateRoute><HomePage /></PrivateRoute>} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
+      </Routes>
+    </Router>
   );
 }
-
 export default App;

@@ -6,10 +6,11 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -18,25 +19,54 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http
-                .csrf(csrf -> csrf.disable()) // Crucial pour les requêtes POST
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ Active CORS
+                .csrf(csrf -> csrf.disable()) // Désactive CSRF pour les API REST
                 .authorizeExchange(exchanges -> exchanges
-                        .anyExchange().permitAll()
+                        .anyExchange().permitAll() // Permet tout (JWT géré par filtre custom)
                 )
                 .build();
     }
 
+    /**
+     * ✅ Configuration CORS complète pour la Gateway
+     * Permet au frontend (localhost:5173) de communiquer avec la Gateway
+     */
     @Bean
-    public CorsWebFilter corsWebFilter() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        corsConfig.setMaxAge(3600L);
-        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+
+        // ✅ ORIGINE AUTORISÉE (Frontend React)
+        corsConfig.setAllowedOrigins(List.of("http://localhost:5173"));
+
+        // ✅ MÉTHODES HTTP AUTORISÉES
+        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        // ✅ HEADERS AUTORISÉS (Frontend → Backend)
+        corsConfig.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With"
+        ));
+
+        // ✅ HEADERS EXPOSÉS (Backend → Frontend)
+        corsConfig.setExposedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Total-Count"
+        ));
+
+        // ✅ AUTORISE LES COOKIES/CREDENTIALS
         corsConfig.setAllowCredentials(true);
 
+        // ✅ DURÉE DU CACHE PREFLIGHT (1 heure)
+        corsConfig.setMaxAge(3600L);
+
+        // Applique cette config à tous les endpoints
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);
 
-        return new CorsWebFilter(source);
+        return source;
     }
 }

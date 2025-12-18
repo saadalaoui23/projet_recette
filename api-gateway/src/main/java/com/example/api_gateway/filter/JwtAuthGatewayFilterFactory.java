@@ -26,11 +26,10 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
 
     // Liste des endpoints qui ne nécessitent PAS de JWT
     public static final List<String> OPEN_API_ENDPOINTS = List.of(
-            "/users/api/users/register", // Chemin complet arrivant sur Gateway
-            "/users/api/users/login",    // Chemin complet arrivant sur Gateway
-            "/api/users/register",
-            "/api/users/login",
-            "/exists" // Pour matcher /api/users/{id}/exists selon votre path
+            "/users/api/users/register",
+            "/users/api/users/login",
+            "/users/api/users/",  // Pour matcher /users/api/users/{id}/exists
+            "exists"              // Contient "exists" quelque part
     );
 
     public JwtAuthGatewayFilterFactory() {
@@ -47,6 +46,9 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Jw
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
             String path = request.getURI().getPath();
+            if (request.getMethod().name().equals("OPTIONS")) {
+                return chain.filter(exchange);
+            }
 
             // ✅ CORRECTION LOGIQUE : Si le chemin n'est PAS sécurisé (est public), on passe directement
             if (!isSecured(request)) {

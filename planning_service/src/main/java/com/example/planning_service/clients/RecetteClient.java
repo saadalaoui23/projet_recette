@@ -1,5 +1,3 @@
-// planning-service/src/main/java/com/example/planning/clients/RecetteClient.java
-
 package com.example.planning_service.clients;
 
 import org.springframework.cloud.openfeign.FeignClient;
@@ -7,17 +5,21 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import com.example.planning_service.dtos.RecetteDetailsResponse;
 
-// FeignClient cible le Service Recettes
+/**
+ * FeignClient pour la communication interne entre Planning et Recettes.
+ * Il ne passe pas par la Gateway (plus performant en interne Docker).
+ */
 @FeignClient(
-        name = "recettes-service",
-        // En environnement Docker/K8s, on atteint le service par son nom DNS
-        url = "http://recettes-app:8081"
+        name = "recette-service",
+        url = "http://recettes-app:8081" // ✅ Cible le conteneur du microservice Recettes
 )
 public interface RecetteClient {
 
-    // Contrat pour récupérer les détails d'une recette par ID
-    // Back-end RecetteController est mappé sur @RequestMapping(\"/recettes\")
-    // → l'URL effective est /recettes/{id}
+    /**
+     * Récupère les détails complets d'une recette.
+     * @param id Identifiant de la recette stocké dans MongoDB (Planning)
+     * @return Les détails venant de PostgreSQL (Recettes)
+     */
     @GetMapping("/recettes/{id}")
-    RecetteDetailsResponse getRecetteDetails(@PathVariable Long id);
+    RecetteDetailsResponse getRecetteDetails(@PathVariable("id") Long id); // ✅ "id" ajouté pour la stabilité
 }

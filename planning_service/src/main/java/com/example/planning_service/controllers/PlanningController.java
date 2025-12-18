@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/planning/menus") // Endpoint de base pour les menus
+@RequestMapping({"/menus", "/menus/"}) // Endpoint de base pour les menus
 @RequiredArgsConstructor
 public class PlanningController {
 

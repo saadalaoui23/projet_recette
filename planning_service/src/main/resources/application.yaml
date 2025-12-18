@@ -1,15 +1,29 @@
-spring:
-  server:
-    port: ${SERVER_PORT:8082}
+server:
+  port: ${SERVER_PORT:8082}
 
-  # Configuration de la Base de Données MongoDB
+spring:
+  application:
+    name: planning-service
+
+  # --- Configuration MongoDB ---
   data:
     mongodb:
-      # L'URL de connexion complète, utilisant les variables d'environnement
-      uri: mongodb://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}?authSource=admin
-      # Utilisation des variables d'environnement pour l'hôte, le port, et les identifiants.
-      # Remarque: 'authSource=admin' est souvent requis pour les images MongoDB conteneurisées.
+      # On utilise l'URI flexible.
+      # Note : Si votre Mongo n'a pas de mot de passe en local, utilisez :
+      # mongodb://${DB_HOST:planning-mongo}:${DB_PORT:27017}/${DB_NAME:planningDB}
+      uri: mongodb://${DB_USER}:${DB_PASS}@${DB_HOST:planning-mongo}:${DB_PORT:27017}/${DB_NAME:planningDB}?authSource=admin
+      auto-index-creation: true
 
-  # Configuration Kafka (pour l'étape suivante)
+  # --- Configuration Kafka (Indispensable pour écouter les recettes) ---
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    consumer:
+      group-id: planning-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        # ✅ Très important : permet de lire les objets RecetteEvent venant d'un autre microservice
+        spring.json.trkafkausted.packages: "*"
+    topic:
+      recette-event: recette-events-topic # ✅ Doit être identique au topic du service Recette

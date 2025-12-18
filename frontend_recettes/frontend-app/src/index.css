@@ -25,10 +25,12 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  padding: 0;
+  display: block; /* On enlève le flex pour que le site occupe toute la largeur */
+  width: 100%;
   min-height: 100vh;
+  background-color: #f9fafb; /* Un gris très léger (gray-50) pour le fond */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
 h1 {

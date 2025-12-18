@@ -9,6 +9,18 @@ spring:
     config:
       enabled: false
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
       default-filters:
         - name: JwtAuth # Active le filtre JwtAuthFilter globalement (CORRECT)
       routes:
@@ -23,12 +35,14 @@ spring:
 
         # 2. ROUTE RECETTES
         - id: recettes_route
-          # ✅ CORRECTION: Utilisation de l'URL directe du conteneur recettes-service
+          # Service Recettes (expose les endpoints /recettes, /recettes/{id}, ...)
           uri: http://recettes-app:8081
           predicates:
-            - Path=/recettes/**
+            # Depuis l'extérieur on appelle /api/recettes/**
+            - Path=/api/recettes/**
           filters:
-            - StripPrefix=1
+            # Réécrit /api/recettes/... en /recettes/... pour le service de recettes
+            - RewritePath=/api/recettes/?(?<segment>.*), /recettes/${segment}
 
         # 3. ROUTE PLANNING
         - id: planning_route

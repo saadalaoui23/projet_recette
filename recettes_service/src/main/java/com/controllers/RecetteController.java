@@ -22,9 +22,8 @@ import com.services.RecetteService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/recettes")
+@RequestMapping({"/recettes", "/recettes/"})
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 public class RecetteController {
     private final RecetteService recetteService; // Injection automatique grâce à @RequiredArgsConstructor
 

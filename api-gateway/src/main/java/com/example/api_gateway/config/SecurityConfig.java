@@ -36,7 +36,7 @@ public class SecurityConfig {
         CorsConfiguration corsConfig = new CorsConfiguration();
 
         // ✅ ORIGINE AUTORISÉE (Frontend React)
-        corsConfig.setAllowedOrigins(List.of("http://localhost:5173"));
+        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000"));
 
         // ✅ MÉTHODES HTTP AUTORISÉES
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

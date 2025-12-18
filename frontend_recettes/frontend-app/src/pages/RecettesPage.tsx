@@ -6,7 +6,7 @@ import RecetteCard from '../component/RecetteCard';
 
 interface Recette {
   id: number;
-  nom: string;
+  nom: string; // ✅ Aligné avec le backend (Recettes.java)
   description: string;
   ingredients: string;
 }
@@ -24,8 +24,9 @@ const RecettesPage: React.FC = () => {
       return;
     }
 
-    // Même logique que HomePage : passage par la Gateway vers /recettes du backend
-    axiosInstance.get('/recettes/recettes')
+    // ✅ Appel via la Gateway (port 8000)
+    // Le RewritePath de la Gateway transformera /api/recettes en /recettes pour le microservice
+    axiosInstance.get('/api/recettes')
       .then(res => setRecettes(res.data))
       .catch(err => {
         console.error('Erreur chargement recettes:', err);
@@ -56,7 +57,11 @@ const RecettesPage: React.FC = () => {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {recettes.map(r => (
-              <RecetteCard key={r.id} titre={r.nom} description={r.description} />
+              <RecetteCard
+                key={r.id}
+                nom={r.nom} // ✅ CORRECTION : Utilisez 'nom' et non 'titre'
+                description={r.description}
+              />
             ))}
           </div>
         )}
@@ -66,5 +71,3 @@ const RecettesPage: React.FC = () => {
 };
 
 export default RecettesPage;
-
-

@@ -18,9 +18,9 @@ const HomePage: React.FC = () => {
     }
 
     // ✅ Appel via la Gateway vers le service de recettes
-    // Route Gateway: Path=/recettes/** + StripPrefix=1, contrôleur backend @RequestMapping("/recettes")
-    // → côté frontend on appelle /recettes/recettes
-    axiosInstance.get('/recettes/recettes')
+    // Nouvelle route Gateway: Path=/api/recettes/** + StripPrefix=1
+    // → côté frontend on appelle /api/recettes, côté service c'est /recettes
+    axiosInstance.get('/api/recettes')
       .then(res => setRecettes(res.data.slice(0, 4)))
       .catch(err => {
         console.error('Erreur chargement recettes:', err);
@@ -46,7 +46,7 @@ const HomePage: React.FC = () => {
                 <p className="text-gray-500">⏳ Chargement...</p>
               ) : recettes.length > 0 ? (
                 recettes.map(r => (
-                  <RecetteCard key={r.id} titre={r.titre} description={r.description} />
+                  <RecetteCard key={r.id} nom={r.nom} description={r.description} />
                 ))
               ) : (
                 <p className="text-gray-500">Aucune recette disponible</p>
